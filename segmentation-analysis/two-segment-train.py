@@ -5,10 +5,13 @@ import pickle
 import numpy as np
 import torch
 
-from trainer.trainer import CCnmpTrainer, CCnmp2
+from trainer import CCnmpTrainer, CCnmp2
 
 if __name__ == "__main__":
-    training_iter_count = int(os.environ['training_iters'])
+    training_iter_count = int(os.getenv('training_iters', 1_000_000))
+    first_segment_length = int(os.getenv('first_segment_length', 25))
+    repeat_count = int(os.getenv('repeat_count', 1))
+    node_count = int(os.getenv('node_count', 16))
     validation_iter_count = int (training_iter_count / 100)
     file = open("../input/synthetic_dataset.dat", 'rb')
     data_set = pickle.load(file)
@@ -19,10 +22,8 @@ if __name__ == "__main__":
 
     torch.set_num_threads(50)
     trial_id = time.time()
-    node_count = 16
-    first_segment_lengths = [5, 10, 15, 20, 25, 30, 35, 40, 45]
 
-    for iter, first_segment_length in enumerate(first_segment_lengths):
+    for iter in range(repeat_count):
         y_arr = []
         x_arr = []
 

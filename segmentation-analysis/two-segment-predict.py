@@ -5,8 +5,8 @@ import time
 import numpy as np
 import torch
 
-from trainer.trainer import CCnmpTrainer, CCnmp2
-from trainer.trajectory_printer import print_cnmp_trajectory
+from trainer import CCnmpTrainer, CCnmp2
+from trajectory_printer import print_cnmp_trajectory
 
 if __name__ == "__main__":
     file = open("../input/synthetic_dataset.dat", 'rb')
@@ -29,9 +29,10 @@ if __name__ == "__main__":
         data_x = np.array(x_arr)
         data_y = np.array(y_arr)
 
-        dir_arr = [name for name in os.listdir("../output") if name.startswith("segment-size") ]
+        #dir_arr = [name for name in os.listdir("../output") if name.startswith("segment-size") ]
+        dir_arr = [name for name in os.listdir("/Users/mehmetpekmezci/ozu/segment-analysis") if name.startswith("segment-size") ]
         for dir_name in dir_arr:
-            dir_path= f"../output/{dir_name}"
+            dir_path= f"/Users/mehmetpekmezci/ozu/segment-analysis/{dir_name}"
             path= f"{dir_path}/cnmp_best_validation.h5"
             first_segment_size = int(dir_name.split("-")[2])
             node_count = int(dir_name.split("-")[3])
