@@ -34,7 +34,7 @@ if __name__ == "__main__":
         data_x = np.array(x_arr)
         data_y = np.array(y_arr)
 
-        dir_name= f"../output/segment-size-{first_segment_length}-{node_count}-{trial_id}"
+        dir_name= f"../output/segment-size-{first_segment_length}-{node_count}-{trial_id}-{iter}"
         os.mkdir(dir_name)
         segment_borders = [[0,first_segment_length], [first_segment_length, 50]]
 
