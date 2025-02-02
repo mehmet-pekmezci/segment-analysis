@@ -5,6 +5,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib import ticker
 
 from trainer import CCnmpTrainer, CCnmp2
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     segment_border_map["four"] = [[0,12], [12, 24], [24, 36], [36, 50]]
     segment_border_map["five"] = [[0, 10], [10, 20], [20, 30], [30, 40], [40, 50]]
 
-    random_obs_test_count = 50
+    random_obs_test_count = 1000
 
     trajectories = np.zeros((4, 50))
     for i, trajectory in enumerate(data_set[0]):
@@ -124,15 +125,40 @@ if __name__ == "__main__":
         else:
             error_map[key].append(np.average(model_errors))
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    fig, axs = plt.subplots(1, 3, figsize=(19,10))
     colors = ["orange", "blue", "red", "green", "magenta"]
+    max_err = 0
     for key, value in segment_border_map.items():
         seg_count = len(value)
         errors = error_map[key]
         for err in errors:
-            ax1.scatter(seg_count, err, color=colors[seg_count-1])
-        ax2.bar(seg_count, np.average(errors), color=colors[seg_count-1])
-        ax3.bar(seg_count, np.average(np.sort(errors)[:-2]), color=colors[seg_count-1])
-    plt.show()
+            axs[0].scatter(seg_count, err, color=colors[seg_count-1])
+        axs[1].bar(seg_count, np.average(errors), color=colors[seg_count-1])
+        axs[1].errorbar(seg_count, np.average(errors), yerr=np.std(errors), fmt='o-', capsize=5, label="Mean ± Std Dev", color="black")
+        axs[1].text(seg_count, np.average(errors) + np.std(errors) + 0.005, f"{np.average(errors):.3f}",
+                ha='center', fontsize=10, fontweight='bold')
+
+        axs[2].bar(seg_count, np.average(np.sort(errors)[:-2]), color=colors[seg_count-1])
+        axs[2].errorbar(seg_count, np.average(np.sort(errors)[:-2]), yerr=np.std(np.sort(errors)[:-2]), fmt='o-', capsize=5, label="Mean ± Std Dev", color="black")
+        axs[2].text(seg_count, np.average(np.sort(errors)[:-2]) + np.std(np.sort(errors)[:-2]) + 0.005, f"{np.average(np.sort(errors)[:-2]):.3f}",
+                    ha='center', fontsize=10, fontweight='bold')
+
+        max_err = max(max_err, max(errors))
+
+    for ax in axs:
+        ax.set_xticks(np.arange(2,6, dtype=int))
+        #ax.set_xticklabels(["two", "three", "four", "five"])
+        ax.set_xticklabels(["2", "3", "4", "5"])
+        ax.set_xlabel('Segment Count', fontsize=15)
+        ax.tick_params(labelsize=12)
+        ax.set_ylim(0, max_err+0.01)
+    axs[0].set_ylabel('Error', fontsize=15)
+    axs[0].set_title('Avg. Error Per Trial', fontsize=20)
+    axs[1].set_title('Overall Avg. Error', fontsize=20)
+    axs[2].set_title('Overall Avg. Error Discarding Outliers', fontsize=20)
+
+    plt.suptitle("Avg. Prediction Errors For Different Segment Counts", fontsize=30)
+
+    plt.savefig("/Users/mehmetpekmezci/ozu/segment-analysis/different_segment_count.png")
 
 
