@@ -10,5 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /app/segmentation-analysis
 
-CMD ["python", "two-segment-train.py"]
+#CMD ["python", "two-segment-train.py"]
+#CMD ["python", "three-segment-train.py"]
+#CMD ["python", "four-segment-train.py"]
+CMD ["python", "five-segment-train.py"]
 

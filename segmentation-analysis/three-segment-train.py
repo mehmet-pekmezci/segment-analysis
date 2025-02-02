@@ -9,9 +9,11 @@ from trainer import CCnmpTrainer, CCnmp2
 
 if __name__ == "__main__":
     training_iter_count = int(os.getenv('training_iters', 1_000_000))
-    first_segment_length = int(os.getenv('first_segment_length', 25))
+    first_segment_length = int(os.getenv('first_segment_length', 17))
+    second_segment_length = int(os.getenv('second_segment_length', 17))
+    third_segment_length = 50-first_segment_length-second_segment_length
     repeat_count = int(os.getenv('repeat_count', 1))
-    node_count = int(os.getenv('node_count', 13))
+    node_count = int(os.getenv('node_count', 10))
     validation_iter_count = int (training_iter_count / 100)
     file = open("../input/synthetic_dataset.dat", 'rb')
     data_set = pickle.load(file)
@@ -34,9 +36,11 @@ if __name__ == "__main__":
         data_x = np.array(x_arr)
         data_y = np.array(y_arr)
 
-        dir_name= f"../output/segment-size-{first_segment_length}-{node_count}-{trial_id}-{iter}"
+        dir_name= f"../output/three-segment-{first_segment_length}-{second_segment_length}-{third_segment_length}-{node_count}-{trial_id}-{iter}"
         os.mkdir(dir_name)
-        segment_borders = [[0,first_segment_length], [first_segment_length, 50]]
+        segment_borders = [[0,first_segment_length],
+                           [first_segment_length, first_segment_length+second_segment_length],
+                           [first_segment_length+second_segment_length, 50]]
 
         trainer = CCnmpTrainer(data_x, data_y, data_x, data_y, segment_borders=segment_borders, segment_count=len(segment_borders))
         model1 = CCnmp2(trainer.d_x, trainer.d_y, node_count=node_count, segment_count=len(segment_borders)).double()
@@ -47,6 +51,7 @@ if __name__ == "__main__":
             total_params+= param_count
             print(p)
         print(f'Total number of parameters: {total_params}')
+
         print(f'Training starting for {dir_name}')
         start = time.time()
         trainer.train(model1, dir_name, iter_count=training_iter_count, validation_checkpoint=validation_iter_count, lr_decay_rate=0.999)
