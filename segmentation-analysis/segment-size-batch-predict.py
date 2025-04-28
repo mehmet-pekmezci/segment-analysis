@@ -37,6 +37,15 @@ def get_random_indexes(border_map_in):
     return random_indexes
 
 
+def find_outliers(errors_in):
+    sorted_arr = np.sort(errors_in)
+    inc_arr = [sorted_arr[i] - sorted_arr[i-1] for i in range(1, len(sorted_arr))]
+    index = np.argmax(inc_arr)
+    if inc_arr[index] > 3* (max(sorted_arr) - min(sorted_arr)) / len(sorted_arr):
+        return sorted_arr [index+1:].tolist()
+    return []
+
+
 if __name__ == "__main__":
     file = open("../input/synthetic_dataset.dat", 'rb')
     data_set = pickle.load(file)
@@ -128,23 +137,32 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(1, 3, figsize=(19,10))
     colors = ["orange", "blue", "red", "green", "magenta"]
     max_err = 0
+    all_outlier_indexes = []
+    all_outlier_values = []
     for key, value in segment_border_map.items():
         seg_count = len(value)
         errors = error_map[key]
-        for err in errors:
-            axs[0].scatter(seg_count, err, color=colors[seg_count-1])
+        outliers = find_outliers(errors)
+        without_outliers = a = [x for x in errors if x not in outliers]
+        all_outlier_values += outliers
+        all_outlier_indexes += [seg_count] * len(outliers)
+        axs[0].scatter([seg_count] * len(errors), errors, color=colors[seg_count-1], label=f"Average error of trial with {seg_count} segments")
         axs[1].bar(seg_count, np.average(errors), color=colors[seg_count-1])
         axs[1].errorbar(seg_count, np.average(errors), yerr=np.std(errors), fmt='o-', capsize=5, label="Mean ± Std Dev", color="black")
         axs[1].text(seg_count, np.average(errors) + np.std(errors) + 0.005, f"{np.average(errors):.3f}",
                 ha='center', fontsize=10, fontweight='bold')
 
-        axs[2].bar(seg_count, np.average(np.sort(errors)[:-2]), color=colors[seg_count-1])
-        axs[2].errorbar(seg_count, np.average(np.sort(errors)[:-2]), yerr=np.std(np.sort(errors)[:-2]), fmt='o-', capsize=5, label="Mean ± Std Dev", color="black")
-        axs[2].text(seg_count, np.average(np.sort(errors)[:-2]) + np.std(np.sort(errors)[:-2]) + 0.005, f"{np.average(np.sort(errors)[:-2]):.3f}",
+        print(f"without outliers comparison : {np.sort(errors)[:-2]} - {np.sort(without_outliers)}")
+        axs[2].bar(seg_count, np.average(without_outliers), color=colors[seg_count-1])
+        axs[2].errorbar(seg_count, np.average(without_outliers), yerr=np.std(without_outliers), fmt='o-', capsize=5, label="Mean ± Std Dev", color="black")
+        axs[2].text(seg_count, np.average(without_outliers) + np.std(without_outliers) + 0.005, f"{np.average(without_outliers):.3f}",
                     ha='center', fontsize=10, fontweight='bold')
 
         max_err = max(max_err, max(errors))
 
+    axs[0].scatter(all_outlier_indexes, all_outlier_values, marker='o', s=200, lw=5, facecolors='none', edgecolors='black', label="Outlier")
+
+    print(f'outliers : {all_outlier_indexes} - {all_outlier_values}')
     for ax in axs:
         ax.set_xticks(np.arange(2,6, dtype=int))
         #ax.set_xticklabels(["two", "three", "four", "five"])
@@ -156,6 +174,8 @@ if __name__ == "__main__":
     axs[0].set_title('Avg. Error Per Trial', fontsize=20)
     axs[1].set_title('Overall Avg. Error', fontsize=20)
     axs[2].set_title('Overall Avg. Error Discarding Outliers', fontsize=20)
+
+    axs[0].legend(loc="upper left")
 
     plt.suptitle("Avg. Prediction Errors For Different Segment Counts", fontsize=30)
 
